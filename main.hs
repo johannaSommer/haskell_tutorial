@@ -1,41 +1,27 @@
-module Exercise_1 where
+threeAscending :: Integer -> Integer -> Integer -> Bool
+threeAscending x y z = x < y && y < z
 
-import Test.QuickCheck
+fourEqual :: Integer -> Integer -> Integer -> Integer -> Bool
+fourEqual u v w x = u == v && v == w && w == x
 
-{-H1.1-}
-myPair :: Integer -> Integer -> Integer
-myPair = undefined
+fac :: Integer -> Integer
+fac 1 = 1
+fac n | n > 0 = n * fac (n - 1)
 
-{-H1.2-}
-myFst :: Integer -> Integer
-myFst = undefined
+sumEleven :: Integer -> Integer
+sumEleven n = sumEleven' n 10
 
-{-H1.3-}
-mySnd :: Integer -> Integer
-mySnd = undefined
+sumEleven' :: Integer -> Integer -> Integer
+sumEleven' n 0 = n
+sumEleven' n i = n + i + sumEleven' n (i - 1)
 
-{-H1.4-}
-prop_myPair :: Integer -> Integer -> Property
-prop_myPair = undefined
+argMax :: ( Integer -> Integer ) -> Integer -> Integer
+argMax g n = argMax' g n 0
 
-{-H2.1-}
-equivMod :: Integer -> Integer -> Integer -> Bool
-equivMod = undefined 
+argMax' :: (Integer -> Integer) -> Integer -> Integer -> Integer
+argMax' g 0 m = m
+argMax' g n m | n > 0 = argMax' g (n-1) temp
+  where temp = if g n > g m then n else m
 
-{-H2.2-}
-quadRes :: Integer -> Integer -> Bool
-{-WETT-}
-quadRes = undefined
-{-TTEW-}
-
-{-H2.3-}
-legendre :: Integer -> Integer -> Integer
-legendre = undefined
-
-{-H2.4-}
-prime :: Integer -> Bool
-prime = undefined
-
-{-H2.5-}
-prop_eulersCrit :: Integer -> Integer -> Property
-prop_eulersCrit = undefined
+g :: Integer -> Integer
+g n = if n < 10 then n * n else n
