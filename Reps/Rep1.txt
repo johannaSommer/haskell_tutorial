@@ -85,3 +85,26 @@ halfEven' (x:xs) (y:ys)
 halfEven'' :: [Int] -> [Int] -> [Int] 
 halfEven'' xs ys = filter even $ map (\(x, y) -> x+y) (zip xs ys)
 
+data Term = App Term Term | Abs String Term | Var String
+
+instance Show Term where
+  show (Var x) = x
+  show (Abs x t) = "(\\" ++ x ++ " -> " ++ show t ++ ")"
+  show (App t1 t2@(App _ _)) = show t1 ++ " (" ++ show t2 ++ ")"
+  show (App t1 t2) = show t1 ++ " " ++ show t2
+
+freeVars :: Term -> [String]
+freeVars (Var s) = s
+freeVars (Abs s t) = s:(freeVars t)
+freeVars (App t1 t2) = (freeVars t1):(freeVars t2)
+
+data Either a b = Left a | Right b
+
+g :: (a -> a') -> (b -> b') -> Either a b -> Either a' b'
+g f _ (Left  x) = Left  (f x)
+g _ f (Right x) = Right (f x)
+
+h :: (a -> Either a b) -> a -> b
+h f a 
+  | f a == Right b = b
+  | otherwise = h f (f a)
