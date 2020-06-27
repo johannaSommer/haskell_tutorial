@@ -147,3 +147,141 @@ Case Node l x r
          (by def sumTree) .=. sumTree l + x + sumTree r
      QED
  QED
+
+
+---
+
+data Tree a = L | N (Tree a) a (Tree a)
+
+flat L = []
+flat (N l x r) = flat l ++ (x : flat r)
+
+app L xs = xs
+app (N l x r) xs = app l (x : app r xs)
+
+[] ++ ys = ys
+(x : xs) ++ ys = x : (xs ++ ys)
+
+axiom app_assoc: (xs ++ ys) ++ zs .=. xs ++ (ys ++ zs)
+axiom app_nil: xs ++ [] .=. xs
+axiom nil_app: [] ++ xs .=. xs
+
+goal app t [] .=. flat t
+
+Lemma gen: app t xs .=. flat t ++ xs
+Proof by induction on Tree t
+Case L
+    To show: app L xs .=. flat L ++ xs
+
+    Proof
+    app L xs
+    (by def app) .=. xs
+
+    flat L ++ xs
+    (by def flat) .=. [] ++ xs
+    (byy def ++) .=. xs
+    QED
+
+Case (N l x r)
+    To show: app (N l x r) xs .=. flat (N l x r) ++ xs
+    IH1: app l xs .=. flat l ++ xs
+    IH2: app r xs .=. flat r ++ xs
+
+    Proof
+    app (N l x r) xs
+    (by def app) .=. app l (x : app r xs)
+    (by IH1) .=. flat l ++ (x: app r xs)
+    (by IH2) .=. flat l ++ (x:(flat r ++ xs))
+    (by def ++) .=. flat l ++ ((x:flat r) ++ xs)
+    (by app_assoc) .=. flat l ++ (x : flat r) ++ xs
+
+    flat (N l x r) ++ xs
+    (by def flat) .=. flat l ++ (x : flat r) ++ xs
+    QED
+ QED
+
+Lemma: app t [] .=. flat t
+Proof
+                     app t []
+    (by gen)     .=. flat t ++ []
+    (by app_nil) .=. flat t
+QED
+
+---------------------
+
+data List a = [] | a : List a
+data Bool = True | False
+
+filter f [] = []
+filter f (x : xs) = if f x then x : filter f xs else filter f xs
+
+(f . g) x = f (g x)
+
+axiom if_True: (if True then x else y) .=. x
+axiom if_False: (if False then x else y) .=. y
+
+goal filter p . filter p .=. filter p
+
+---
+
+Lemma fpfp: filter p (filter p xs) .=. filter p xs
+Proof by induction on List xs
+Case []
+    To show: filter p (filter p []) .=. filter p []
+
+    Proof
+    filter p (filter p [])
+    (by def filter) .=. filter p []
+    QED
+
+Case (x:xs)
+    To show: filter p (filter p (x:xs)) .=. filter p (x:xs)
+    IH: filter p (filter p xs) .=. filter p xs
+    Case True
+        Assumption: f x == True
+
+        Proof
+        filter p (filter p (x:xs))
+        (by def filter) .=. filter p (if p x then x : filter p xs else filter p xs)
+        (by Assumption) .=. filter p (if True then x : filter p xs else filter p xs)
+        (by if_True) .=. filter p (x : filter p xs)
+        (by def filter) .=. if f x then x : filter f (filter p xs) else filter f (filter p xs)
+        (by Assumption) .=. if True then x : filter f (filter p xs) else filter f (filter p xs)
+        (by if_True) .=. x : filter p (filter p xs)
+        (by IH) .=. x : filter p xs
+
+        filter p (x:xs)
+        (by def filter) .=. if f x then x : filter f xs else filter f xs
+        (by Assumption) .=. if True then x : filter f xs else filter f xs
+        (by if_True) .=. x : filter p xs
+        QED
+    Case False
+        Assumption: f x == False
+
+        Proof
+        filter p (filter p (x:xs))
+        (by def filter) .=. filter p (if p x then x : filter p xs else filter p xs)
+        (by Assumption) .=. filter p (if False then x : filter p xs else filter p xs)
+        (by if_False) .=. filter p (filter p xs)
+        (by IH) .=. filter p xs
+
+        filter p (x:xs)
+        (by def filter) .=. if f x then x : filter f xs else filter f xs
+        (by Assumption) .=. if False then x : filter f xs else filter f xs
+        (by if_False) .=. filter p xs
+        QED
+    QED
+QED
+
+
+Lemma: filter p . filter p .=. filter p
+Proof by extensionality with xs
+  To show: (filter p . filter p) xs .=. filter p xs
+
+  Proof
+                     (filter p . filter p) xs
+      (by def .) .=. filter p (filter p xs)
+      (by fpfp)  .=. filter p xs
+  QED
+QED
+
