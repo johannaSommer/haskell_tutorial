@@ -1,8 +1,6 @@
 module Lecture10 where
-
-module Exercise_10 where
 import Data.List
-import Test.QuickCheck
+--import Test.QuickCheck
 
 {-H10.1-}
 data Player = V | H -- vertical or horizontal player
@@ -33,40 +31,47 @@ height :: Board -> Int
 height = length
 
 {-H10.1.1-}
-prettyShowField :: Field -> String
-prettyShowField (P p) = show p
-prettyShowField E = "+"
-
 prettyShowBoard :: Board -> String
-prettyShowBoard = unlines . map (concat . map prettyShowField)
+prettyShowBoard [] = ""
+prettyShowBoard (x:xs) = (printRow x) ++ (prettyShowBoard xs)
+
+printRow :: Row -> String
+printRow [] = "\n"
+printRow (x:xs) = (printField x) ++ (printRow xs)
+
+printField :: Field -> String
+printField (P H) = "H"
+printField (P V) = "V"
+printField E = "+"
 
 {-H10.1.2-}
 -- position on a board (row, column)
 -- (0,0) corresponds to the top left corner
 type Pos = (Int, Int)
 
-isValidPos :: Board -> Pos -> Bool
-isValidPos b (r,c) = 0 <= r && r < height b && 0 <= c && c < width b
-
-fieldAt :: Board -> Pos -> Field
-fieldAt b (r,c) = row b r !! c
-
 isValidMove :: Game -> Pos -> Bool
-isValidMove (Game b H) p@(r,c) = let np = (r,c+1) in
-  isValidPos b p && isValidPos b np && [fieldAt b p] `union` [fieldAt b np] == [E]
-isValidMove (Game b V) (r,c) = isValidMove (Game (transpose b) H) (c,r)
+isValidMove (Game b H) (r,c) =  ((height b) > (r+1)) && ((width b) > c) && (b !! r !! c == E) && (b !! (r+1) !! c == E)
+isValidMove (Game b V) (r,c) =  ((height b) > r) && ((width b) > (c+1)) && (b !! r !! c == E) && (b !! r !! (c+1) == E)
 
 {-H10.1.3-}
 canMove :: Game -> Bool
-canMove = undefined
+canMove g@(Game b _) = or [isValidMove g (r, c) | r <- [0 .. (height b)], c <- [0 .. (width b)]]
+
 
 {-H10.1.4-}
 updateBoard :: Board -> Pos -> Field -> Board
-updateBoard = undefined
+updateBoard b (r, c)  f = aux b r
+    where
+    aux (x:xs) 0 = (updateRow x c f) : xs
+    aux (x:xs) r = x : aux xs (r-1)
+
+updateRow :: Row -> Int -> Field -> Row
+updateRow (x:xs) 0 f = f : xs
+updateRow (x:xs) c f = x : (updateRow xs (c-1) f)
 
 {-H10.1.5-}
 playMove :: Game -> Pos -> Game
-playMove  = undefined
+playMove (Game b p) pos = let newplayer = if p == H then V else H in (Game (updateBoard b pos (P p)) newplayer)
 
 {-H10.1.6-}
 -- the first paramter of a strategy is an infite list of
@@ -82,15 +87,4 @@ christmasAI = undefined
 {-H10.1.7-}
 play :: [[Double]] -> Int -> Strategy -> Strategy -> ([Board],Player)
 play = undefined
-
--- generates infinite list of values between (0,1)
-genRandomZeroOne :: Gen [Double]
-genRandomZeroOne = mapM (const $ choose (0::Double,1)) [1..]
-
--- plays a game and prints it to the console
-playAndPrint :: Int -> Strategy -> Strategy -> IO ()
-playAndPrint dim sh sv = do
-  rss <- generate $ mapM (const $ genRandomZeroOne) [1..]
-  let (bs, w) = play rss dim sh sv
-  putStr $ (unlines $ map prettyShowBoard bs) ++ "\nWinner: " ++ show w ++ "\n"
 
